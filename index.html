@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Привычки</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Привычки">
+<meta name="theme-color" content="#131311">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root{
+  --bg:#131311; --card:#1d1d19; --card2:#23231f; --line:#2a2a26;
+  --text:#f0ede4; --sub:#8c887c; --dim:#6b675d;
+  --accent:#e3a82b; --on-accent:#1a1508; --accent-dim:#5c4712;
+  --danger:#d97a6c; --danger-line:#7a3b32;
+  --track:#2b2b26;
+  --r:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font-size:16px; overscroll-behavior-y:none;
+  -webkit-user-select:none; user-select:none;
+}
+.view{
+  display:none; min-height:100dvh;
+  padding:calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 100px);
+  max-width:520px; margin:0 auto;
+}
+.view.active{display:block; animation:fade .18s ease}
+@keyframes fade{from{opacity:.4}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- header ---------- */
+.hdr{display:flex; justify-content:space-between; align-items:flex-start; padding:8px 4px 16px}
+.hdr h1{font-size:26px; font-weight:600; letter-spacing:-.3px}
+.hdr .sub{font-size:13px; color:var(--sub); margin-top:4px}
+.icon-btn{
+  background:none; border:none; color:var(--sub); padding:8px;
+  font-size:0; cursor:pointer; border-radius:10px;
+}
+.icon-btn:active{background:var(--card)}
+.icon-btn svg{width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
+
+/* ---------- list ---------- */
+.card{
+  background:var(--card); border-radius:var(--r); padding:14px 14px 12px;
+  margin-bottom:10px; cursor:pointer;
+}
+.card:active{background:var(--card2)}
+.card .top{display:flex; justify-content:space-between; align-items:center; gap:12px}
+.card .name{font-size:15px}
+.card .meta{font-size:12px; color:var(--sub); margin-top:3px}
+.card .right{display:flex; align-items:center; gap:14px; flex-shrink:0}
+.card .days{text-align:right}
+.card .days b{font-size:24px; font-weight:600; color:var(--accent); line-height:1; font-variant-numeric:tabular-nums}
+.card .days span{display:block; font-size:11px; color:var(--sub); margin-top:2px}
+.check{
+  width:46px; height:46px; border-radius:50%; border:1.5px solid var(--accent);
+  background:none; color:var(--accent); font-size:0; cursor:pointer; flex-shrink:0;
+}
+.check:active{transform:scale(.92)}
+.check svg{width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+.check.done{background:var(--accent); border-color:var(--accent); color:var(--on-accent)}
+.bar{
+  height:4px; border-radius:2px; background:var(--track); margin-top:12px; overflow:hidden;
+}
+.bar i{display:block; height:100%; background:var(--accent); border-radius:2px; transition:width .3s ease}
+.bar-lbl{display:flex; justify-content:space-between; font-size:11px; color:var(--dim); margin-top:5px}
+.empty{text-align:center; color:var(--sub); padding:80px 24px; font-size:14px; line-height:1.6}
+.fab{
+  position:fixed; right:calc(env(safe-area-inset-right) + 18px);
+  bottom:calc(env(safe-area-inset-bottom) + 22px);
+  width:56px; height:56px; border-radius:50%;
+  background:var(--accent); color:var(--on-accent); border:none;
+  font-size:0; cursor:pointer; z-index:5;
+}
+.fab:active{transform:scale(.94)}
+.fab svg{width:26px; height:26px; stroke:currentColor; fill:none; stroke-width:2.2; stroke-linecap:round}
+
+/* ---------- detail ---------- */
+.nav{display:flex; justify-content:space-between; align-items:center; padding:4px 0 8px}
+.nav .title{font-size:16px; font-weight:600; max-width:60%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.counter{text-align:center; padding:30px 16px 22px}
+.counter b{font-size:68px; font-weight:600; color:var(--accent); line-height:1; font-variant-numeric:tabular-nums}
+.counter .lbl{font-size:14px; color:var(--sub); margin-top:10px}
+.d-progress{padding:0 4px 20px}
+.d-progress .bar{height:6px; border-radius:3px; margin-top:0}
+.d-progress .bar i{border-radius:3px}
+.d-progress .bar-lbl{font-size:12px; margin-top:7px; color:var(--sub)}
+.big-check{
+  width:100%; border:none; border-radius:12px; padding:15px; font-size:15px;
+  font-weight:600; cursor:pointer; font-family:inherit; margin-bottom:10px;
+  background:var(--accent); color:var(--on-accent);
+}
+.big-check:active{opacity:.85}
+.big-check.done{background:var(--card); color:var(--sub); font-weight:400}
+.mile-row{display:flex; flex-wrap:wrap; gap:8px; padding:4px 0 20px}
+.mile{
+  font-size:12px; padding:6px 11px; border-radius:20px;
+  border:1px solid var(--line); color:var(--dim);
+}
+.mile.hit{border-color:var(--accent-dim); color:var(--accent); background:rgba(227,168,43,.08)}
+.stats{display:flex; gap:10px; margin-bottom:18px}
+.stat{flex:1; background:var(--card); border-radius:12px; padding:12px; text-align:center}
+.stat b{font-size:20px; font-weight:600}
+.stat span{display:block; font-size:11px; color:var(--sub); margin-top:2px}
+.relapse{
+  width:100%; background:none; border:1px solid var(--danger-line); color:var(--danger);
+  border-radius:12px; padding:14px; font-size:15px; cursor:pointer; margin-bottom:24px;
+  font-family:inherit;
+}
+.relapse:active{background:rgba(122,59,50,.15)}
+.hist-title{font-size:12px; color:var(--dim); letter-spacing:.4px; margin-bottom:6px}
+.hist-row{
+  display:flex; justify-content:space-between; padding:11px 0;
+  border-bottom:1px solid var(--card2); font-size:13px;
+}
+.hist-row:last-child{border-bottom:none}
+.hist-row .d{color:var(--text)}
+.hist-row .w{color:var(--sub)}
+.hist-empty{font-size:13px; color:var(--dim); padding:10px 0}
+
+/* ---------- sheets ---------- */
+.overlay{
+  position:fixed; inset:0; background:rgba(9,9,8,.65); z-index:10;
+  display:none; align-items:flex-end;
+}
+.overlay.open{display:flex; animation:fade .15s ease}
+.sheet{
+  width:100%; max-width:520px; margin:0 auto;
+  background:var(--card); border-radius:20px 20px 0 0;
+  padding:8px 20px calc(env(safe-area-inset-bottom) + 24px);
+  animation:up .22s ease;
+}
+@keyframes up{from{transform:translateY(40px)}to{transform:translateY(0)}}
+.grip{width:36px; height:4px; border-radius:2px; background:#3a3a34; margin:0 auto 16px}
+.sheet h2{font-size:17px; font-weight:600; margin-bottom:16px}
+.sheet label{display:block; font-size:12px; color:var(--sub); margin-bottom:6px}
+.sheet input[type=text]{
+  width:100%; background:var(--bg); border:1px solid #2e2e29; border-radius:10px;
+  padding:12px 14px; font-size:16px; color:var(--text); margin-bottom:14px;
+  font-family:inherit; -webkit-appearance:none; appearance:none;
+}
+.sheet input:focus{outline:none; border-color:var(--accent)}
+.btn{
+  width:100%; border:none; border-radius:12px; padding:14px; font-size:15px;
+  font-weight:600; cursor:pointer; font-family:inherit; margin-top:6px;
+}
+.btn.primary{background:var(--accent); color:var(--on-accent)}
+.btn.primary:active{opacity:.85}
+.btn.danger{background:none; border:1px solid var(--danger-line); color:var(--danger); font-weight:400}
+.btn.ghost{background:none; color:var(--sub); font-weight:400}
+.menu-item{
+  display:flex; align-items:center; gap:12px; width:100%;
+  background:none; border:none; color:var(--text); font-size:15px;
+  padding:14px 4px; cursor:pointer; font-family:inherit; text-align:left;
+  border-bottom:1px solid var(--card2);
+}
+.menu-item:last-of-type{border-bottom:none}
+.menu-item.red{color:var(--danger)}
+.menu-item svg{width:19px; height:19px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0}
+.confirm-text{font-size:14px; color:var(--sub); line-height:1.5; margin-bottom:14px}
+</style>
+</head>
+<body>
+
+<!-- ================= LIST ================= -->
+<section class="view active" id="view-list">
+  <div class="hdr">
+    <div>
+      <h1>Привычки</h1>
+      <div class="sub" id="list-sub"></div>
+    </div>
+    <button class="icon-btn" id="btn-backup" aria-label="Резервная копия">
+      <svg viewBox="0 0 24 24"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M7 11l5 5 5-5M12 4v12"/></svg>
+    </button>
+  </div>
+  <div id="list"></div>
+  <button class="fab" id="btn-add" aria-label="Добавить привычку">
+    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+</section>
+
+<!-- ================= DETAIL ================= -->
+<section class="view" id="view-detail">
+  <div class="nav">
+    <button class="icon-btn" id="btn-back" aria-label="Назад">
+      <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+    <div class="title" id="d-title"></div>
+    <button class="icon-btn" id="btn-menu" aria-label="Меню">
+      <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
+    </button>
+  </div>
+  <div class="counter">
+    <b id="d-days">0</b>
+    <div class="lbl" id="d-days-word">дней держусь</div>
+  </div>
+  <div class="d-progress">
+    <div class="bar"><i id="d-bar"></i></div>
+    <div class="bar-lbl"><span id="d-bar-from"></span><span id="d-bar-to"></span></div>
+  </div>
+  <button class="big-check" id="btn-checkin">+1 день</button>
+  <div class="mile-row" id="d-miles"></div>
+  <div class="stats">
+    <div class="stat"><b id="d-record">0</b><span>рекорд</span></div>
+    <div class="stat"><b id="d-tries">1</b><span id="d-tries-word">попытка</span></div>
+    <div class="stat"><b id="d-total">0</b><span>всего дней</span></div>
+  </div>
+  <button class="relapse" id="btn-relapse">Сорвался</button>
+  <div class="hist-title">ИСТОРИЯ ПОПЫТОК</div>
+  <div id="d-history"></div>
+</section>
+
+<!-- ================= SHEETS ================= -->
+<div class="overlay" id="sheet-add">
+  <div class="sheet">
+    <div class="grip"></div>
+    <h2>Новая привычка</h2>
+    <label for="inp-name">От чего отказываюсь</label>
+    <input type="text" id="inp-name" placeholder="Курение" maxlength="40" autocomplete="off">
+    <p class="confirm-text">Серия начнётся с нуля. Каждый вечер, если продержался день, отмечай «+1». Пропустил отметку — серия обнулится.</p>
+    <button class="btn primary" id="btn-save">Начать</button>
+    <button class="btn ghost" data-close>Отмена</button>
+  </div>
+</div>
+
+<div class="overlay" id="sheet-menu">
+  <div class="sheet">
+    <div class="grip"></div>
+    <button class="menu-item" id="btn-rename">
+      <svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3zM13.5 6.5l3 3"/></svg>
+      Переименовать
+    </button>
+    <button class="menu-item red" id="btn-delete">
+      <svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/></svg>
+      Удалить привычку
+    </button>
+  </div>
+</div>
+
+<div class="overlay" id="sheet-rename">
+  <div class="sheet">
+    <div class="grip"></div>
+    <h2>Переименовать</h2>
+    <input type="text" id="inp-rename" maxlength="40" autocomplete="off">
+    <button class="btn primary" id="btn-rename-save">Сохранить</button>
+    <button class="btn ghost" data-close>Отмена</button>
+  </div>
+</div>
+
+<div class="overlay" id="sheet-relapse">
+  <div class="sheet">
+    <div class="grip"></div>
+    <h2>Точно сорвался?</h2>
+    <p class="confirm-text" id="relapse-text"></p>
+    <button class="btn danger" id="btn-relapse-yes">Да, обнулить счётчик</button>
+    <button class="btn ghost" data-close>Нет, держусь дальше</button>
+  </div>
+</div>
+
+<div class="overlay" id="sheet-delete">
+  <div class="sheet">
+    <div class="grip"></div>
+    <h2>Удалить привычку?</h2>
+    <p class="confirm-text">Вся история попыток будет удалена. Это действие нельзя отменить.</p>
+    <button class="btn danger" id="btn-delete-yes">Удалить</button>
+    <button class="btn ghost" data-close>Отмена</button>
+  </div>
+</div>
+
+<div class="overlay" id="sheet-backup">
+  <div class="sheet">
+    <div class="grip"></div>
+    <h2>Резервная копия</h2>
+    <p class="confirm-text">iOS может очистить данные сайта при нехватке места. Время от времени сохраняй копию.</p>
+    <button class="btn primary" id="btn-export">Экспорт в файл</button>
+    <button class="btn ghost" id="btn-import">Импорт из файла</button>
+    <input type="file" id="inp-import" accept=".json,application/json" hidden>
+  </div>
+</div>
+
+<script>
+const KEY = 'habits-v2';
+let habits = [];
+let currentId = null;
+
+/* ---------- dates ---------- */
+const todayStr = () => {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+};
+const daysBetween = (fromStr, toStr) => {
+  const a = new Date(fromStr + 'T00:00:00');
+  const b = new Date(toStr + 'T00:00:00');
+  return Math.round((b - a) / 86400000);
+};
+const addDays = (s, n) => {
+  const d = new Date(s + 'T00:00:00');
+  d.setDate(d.getDate() + n);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+};
+const MONTHS = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const fmtDate = s => {
+  const d = new Date(s + 'T00:00:00');
+  return d.getDate() + ' ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear();
+};
+
+/* ---------- storage + missed-day check ---------- */
+try { habits = JSON.parse(localStorage.getItem(KEY)) || []; } catch(e) { habits = []; }
+const save = () => localStorage.setItem(KEY, JSON.stringify(habits));
+
+function settle() {
+  const today = todayStr();
+  let changed = false;
+  for (const h of habits) {
+    if (h.lastCheck && daysBetween(h.lastCheck, today) > 1) {
+      if (h.streak > 0) h.attempts.push({ days: h.streak, end: addDays(h.lastCheck, 1), missed: true });
+      h.streak = 0;
+      h.lastCheck = null;
+      changed = true;
+    }
+  }
+  if (changed) save();
+}
+
+/* ---------- declension ---------- */
+const plural = (n, one, few, many) => {
+  const m10 = n % 10, m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return one;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+  return many;
+};
+const daysWord = n => plural(n, 'день', 'дня', 'дней');
+const triesWord = n => plural(n, 'попытка', 'попытки', 'попыток');
+const activeWord = n => plural(n, 'активная', 'активные', 'активных');
+
+/* ---------- milestones ---------- */
+const MILES = [
+  { d: 3,   name: '3 дня' },
+  { d: 7,   name: 'неделя' },
+  { d: 14,  name: '2 недели' },
+  { d: 30,  name: 'месяц' },
+  { d: 60,  name: '2 месяца' },
+  { d: 90,  name: '3 месяца' },
+  { d: 180, name: 'полгода' },
+  { d: 365, name: 'год' }
+];
+function segment(streak) {
+  let prev = { d: 0, name: 'старт' };
+  for (const m of MILES) {
+    if (streak < m.d) return { prev, next: m };
+    prev = m;
+  }
+  return { prev, next: null };
+}
+function progressPct(streak) {
+  const { prev, next } = segment(streak);
+  if (!next) return 100;
+  return Math.round(((streak - prev.d) / (next.d - prev.d)) * 100);
+}
+function progressLabel(streak) {
+  const { next } = segment(streak);
+  if (!next) return 'год позади — держи планку';
+  const left = next.d - streak;
+  return 'до отметки «' + next.name + '» — ' + left + ' ' + daysWord(left);
+}
+
+/* ---------- derived ---------- */
+const getHabit = id => habits.find(h => h.id === id);
+const record = h => Math.max(h.streak, ...h.attempts.map(a => a.days), 0);
+const totalDays = h => h.streak + h.attempts.reduce((s, a) => s + a.days, 0);
+const checkedToday = h => h.lastCheck === todayStr();
+
+/* ---------- views ---------- */
+const $ = id => document.getElementById(id);
+const show = id => {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  $(id).classList.add('active');
+  window.scrollTo(0, 0);
+};
+const openSheet = id => $(id).classList.add('open');
+const closeSheets = () => document.querySelectorAll('.overlay').forEach(o => o.classList.remove('open'));
+
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const CHECK_PLUS = '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>';
+const CHECK_DONE = '<svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>';
+
+function renderList() {
+  settle();
+  $('list-sub').textContent = habits.length
+    ? habits.length + ' ' + activeWord(habits.length)
+    : '';
+  if (!habits.length) {
+    $('list').innerHTML = '<div class="empty">Пока пусто.<br>Нажми «+», чтобы отказаться от первой привычки. Каждый вечер отмечай прожитый без неё день.</div>';
+    return;
+  }
+  $('list').innerHTML = habits.map(h => {
+    const done = checkedToday(h);
+    return `<div class="card" data-id="${h.id}">
+      <div class="top">
+        <div>
+          <div class="name">${esc(h.name)}</div>
+          <div class="meta">рекорд ${record(h)}</div>
+        </div>
+        <div class="right">
+          <div class="days"><b>${h.streak}</b><span>${daysWord(h.streak)}</span></div>
+          <button class="check${done ? ' done' : ''}" data-check="${h.id}" aria-label="${done ? 'День отмечен' : 'Отметить день'}">${done ? CHECK_DONE : CHECK_PLUS}</button>
+        </div>
+      </div>
+      <div class="bar"><i style="width:${progressPct(h.streak)}%"></i></div>
+      <div class="bar-lbl"><span>${progressLabel(h.streak)}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function renderDetail() {
+  const h = getHabit(currentId);
+  if (!h) { show('view-list'); return; }
+  settle();
+  $('d-title').textContent = h.name;
+  $('d-days').textContent = h.streak;
+  $('d-days-word').textContent = daysWord(h.streak) + ' держусь';
+  $('d-bar').style.width = progressPct(h.streak) + '%';
+  const { prev, next } = segment(h.streak);
+  $('d-bar-from').textContent = prev.d ? prev.name : '';
+  $('d-bar-to').textContent = progressLabel(h.streak);
+  const done = checkedToday(h);
+  const btn = $('btn-checkin');
+  btn.textContent = done ? 'Сегодня отмечено ✓' : '+1 день';
+  btn.classList.toggle('done', done);
+  $('d-miles').innerHTML = MILES.map(m =>
+    `<span class="mile${record(h) >= m.d ? ' hit' : ''}">${m.name}</span>`
+  ).join('');
+  $('d-record').textContent = record(h);
+  const tries = h.attempts.length + 1;
+  $('d-tries').textContent = tries;
+  $('d-tries-word').textContent = triesWord(tries);
+  $('d-total').textContent = totalDays(h);
+  $('d-history').innerHTML = h.attempts.length
+    ? h.attempts.slice().reverse().map(a =>
+        `<div class="hist-row"><span class="d">${a.days} ${daysWord(a.days)}</span><span class="w">${a.missed ? 'пропуск' : 'срыв'} ${fmtDate(a.end)}</span></div>`
+      ).join('')
+    : '<div class="hist-empty">Срывов не было. Так держать.</div>';
+}
+
+/* ---------- check-in ---------- */
+function checkIn(id) {
+  const h = getHabit(id);
+  if (!h || checkedToday(h)) return;
+  h.streak += 1;
+  h.lastCheck = todayStr();
+  save();
+}
+
+/* ---------- events ---------- */
+$('list').addEventListener('click', e => {
+  const chk = e.target.closest('[data-check]');
+  if (chk) {
+    checkIn(chk.dataset.check);
+    renderList();
+    return;
+  }
+  const card = e.target.closest('.card');
+  if (!card) return;
+  currentId = card.dataset.id;
+  renderDetail();
+  show('view-detail');
+});
+
+$('btn-checkin').onclick = () => { checkIn(currentId); renderDetail(); };
+
+$('btn-back').onclick = () => { renderList(); show('view-list'); };
+
+$('btn-add').onclick = () => {
+  $('inp-name').value = '';
+  openSheet('sheet-add');
+};
+$('btn-save').onclick = () => {
+  const name = $('inp-name').value.trim();
+  if (!name) { $('inp-name').focus(); return; }
+  habits.push({ id: 'h' + Date.now(), name, streak: 0, lastCheck: null, attempts: [] });
+  save(); closeSheets(); renderList();
+};
+
+$('btn-menu').onclick = () => openSheet('sheet-menu');
+$('btn-rename').onclick = () => {
+  closeSheets();
+  $('inp-rename').value = getHabit(currentId).name;
+  openSheet('sheet-rename');
+};
+$('btn-rename-save').onclick = () => {
+  const name = $('inp-rename').value.trim();
+  if (!name) { $('inp-rename').focus(); return; }
+  getHabit(currentId).name = name;
+  save(); closeSheets(); renderDetail();
+};
+$('btn-delete').onclick = () => { closeSheets(); openSheet('sheet-delete'); };
+$('btn-delete-yes').onclick = () => {
+  habits = habits.filter(h => h.id !== currentId);
+  save(); closeSheets(); renderList(); show('view-list');
+};
+
+$('btn-relapse').onclick = () => {
+  const h = getHabit(currentId);
+  $('relapse-text').textContent = 'Серия ' + h.streak + ' ' + daysWord(h.streak) +
+    ' запишется в историю, счётчик начнётся с нуля.';
+  openSheet('sheet-relapse');
+};
+$('btn-relapse-yes').onclick = () => {
+  const h = getHabit(currentId);
+  if (h.streak > 0) h.attempts.push({ days: h.streak, end: todayStr() });
+  h.streak = 0;
+  h.lastCheck = null;
+  save(); closeSheets(); renderDetail();
+};
+
+/* ---------- backup ---------- */
+$('btn-backup').onclick = () => openSheet('sheet-backup');
+$('btn-export').onclick = () => {
+  const blob = new Blob([JSON.stringify(habits, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'habits-' + todayStr() + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+$('btn-import').onclick = () => $('inp-import').click();
+$('inp-import').onchange = e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (!Array.isArray(data)) throw 0;
+      habits = data.filter(h => h && h.id && h.name && typeof h.streak === 'number' && Array.isArray(h.attempts));
+      save(); closeSheets(); renderList();
+    } catch { alert('Не получилось прочитать файл'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+};
+
+/* ---------- sheet closing ---------- */
+document.querySelectorAll('.overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) closeSheets(); });
+});
+document.querySelectorAll('[data-close]').forEach(b => b.onclick = closeSheets);
+
+/* ---------- refresh on return ---------- */
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    renderList();
+    if ($('view-detail').classList.contains('active')) renderDetail();
+  }
+});
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+
+renderList();
+</script>
+</body>
+</html>
